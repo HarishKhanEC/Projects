@@ -1,0 +1,60 @@
+#define BLYNK_TEMPLATE_ID "TMPL3DKCI6KYC"
+#define BLYNK_TEMPLATE_NAME "Smart Stethoscope"
+#define BLYNK_AUTH_TOKEN "3PWu2WUn-S0OfJaVLyhwIS6-Iao0nW99"
+
+#define BLYNK_PRINT Serial
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+char auth[] = "3PWu2WUn-S0OfJaVLyhwIS6-Iao0nW99";  // Blynk auth token
+char ssid[] = "Haris";         // Your Wi-Fi name
+char pass[] = "hariskhan";     // Your Wi-Fi password
+
+#define MIC_PIN A0             // Microphone analog input
+
+BlynkTimer timer;
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Adjust to 0x3F if LCD doesn't respond
+
+void sendMicData() {
+  int micValue = analogRead(MIC_PIN);
+
+  // Debug to Serial Monitor
+  Serial.print("Mic Value: ");
+  Serial.println(micValue);
+
+  // Send data to Blynk (Virtual Pins)
+  Blynk.virtualWrite(V4, micValue);  // SuperChart
+  Blynk.virtualWrite(V6, micValue);  // Gauge
+  Blynk.virtualWrite(V7, micValue);  // Optional second widget
+
+  // Show on LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Mic Value:");
+  lcd.setCursor(0, 1);
+  lcd.print(micValue);
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // LCD setup
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Connecting...");
+
+  // Connect to Wi-Fi and Blynk
+  Blynk.begin(auth, ssid, pass);
+
+  // Set data send interval
+  timer.setInterval(1000L, sendMicData);
+}
+
+void loop() {
+  Blynk.run();
+  timer.run();
+}
